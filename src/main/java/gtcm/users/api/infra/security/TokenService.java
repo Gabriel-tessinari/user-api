@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
+import com.auth0.jwt.exceptions.JWTVerificationException;
 
 import gtcm.users.api.model.User;
 
@@ -37,8 +38,25 @@ public class TokenService {
 		    return token;
 		} catch (JWTCreationException error) {
 			log.error(error.getMessage());
-		    throw new RuntimeException("Erro ao gerar token jwt");
+		    throw new RuntimeException("Erro ao gerar token.");
 		}
+	}
+	
+	public String getSubject(String token) {
+		
+		try {
+			log.info("START - token: {}", token);
+            var algorithm = Algorithm.HMAC256(password);
+            String email =  JWT.require(algorithm)
+            		.withIssuer("gtcm.users api")
+                    .build()
+                    .verify(token)
+                    .getSubject();
+            log.info("END - email: {}", email);
+            return email;
+	    } catch (JWTVerificationException error) {
+            throw new RuntimeException("Token inválido ou expirado.");
+	    }
 	}
 
 	private Instant expDate() {
